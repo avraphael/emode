@@ -1,12 +1,13 @@
 from sympy import *
 
 x,y=symbols('x y')
-expr = parse_expr(input("Enter an explicit expression for a function f'(x): "))
-h, x0, fx0 = map(float, input("Enter step size, x0, and f(x0): ").replace(' ','').split(","))
-print(f'Your derivative: {expr}')
+expr = parse_expr(input("Enter an explicit expression for a function f'(x,y(x)): "))
+h, x0, fx0 = map(float, input("Enter step size, x0, and y0: ").replace(' ','').split(","))
+print(f"Your differential equation: y' = {expr}")
 print(f'Analytical solution: f(x)= {integrate(expr, x)} + C')
+plot(integrate(expr, x))
 print(f'Approximate solutions up to f({x0+h*10}):')
-print('n    x_n     y_n')
+print('n    x_n    y_n')
 
 
 
