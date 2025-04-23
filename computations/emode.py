@@ -118,6 +118,7 @@ class Emode:
             expr = expr.replace('\\', '').replace('{', '').replace('}', '')
             expr = re.sub(r'(\d)([a-zA-Z])', r'\1*\2', expr)
             raw = sp.sympify(expr)
+        print(raw)
 
         # Strip Eq with Derivative if present
         if isinstance(raw, Eq):

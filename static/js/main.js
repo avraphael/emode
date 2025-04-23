@@ -87,6 +87,9 @@ window.addEventListener('DOMContentLoaded', () => {
       else if (custom === 'ln') {
         mathField.write('\\ln');
       }
+      else if (custom === 'log') {
+        mathField.write('\\log_{}');
+      }
     });
   });
 
@@ -102,7 +105,13 @@ window.addEventListener('DOMContentLoaded', () => {
     ).replace(
       /e\^([a-zA-Z0-9])/g,
       '\\exp($1)'
-      );
+    ).replace
+    (/ln\(([^)]+)\)/g,
+      'log($1)'
+    ).replace(
+      /log_\{([^}]+)\}\(([^)]+)\)/g,
+      'log($2,$1)'
+    );
 
     console.log(latex)
     console.log(processedLatex)
