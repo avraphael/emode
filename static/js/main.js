@@ -24,10 +24,10 @@ export default class TableFormatter {
       html += `
         <tr>
           <td>${r.x}</td>
-          <td>${r.expected}</td>
-          <td>${r.actual}</td>
-          <td>${r.abs_error}</td>
-          <td>${r.rel_error}</td>
+          <td>${r.expected === 'DNE' ? 'DNE' : r.expected}</td>
+          <td>${r.actual === 'DNE' ? 'DNE' : r.actual}</td>
+          <td>${r.abs_error === 'N/A' ? 'N/A' : r.abs_error}</td>
+          <td>${r.rel_error === 'N/A' ? 'N/A' : r.rel_error}</td>
         </tr>`;
     });
 
@@ -112,8 +112,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const step     = parseFloat(document.getElementById('step').value);
     const initialY = parseFloat(document.getElementById('initial_y').value);
 
-    if (step <= 0) return alert('Step must be > 0');
-    if (end <= start) return alert('End must be > start');
+    if (step <= 0) return alert('Step must be > 0');
+    if (end <= start) return alert('End must be > start');
 
     try {
       const res = await fetch('/evaluate', {
@@ -129,6 +129,9 @@ window.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Evaluation failed');
+
+      console.log(document.getElementById('params'))
+      console.log(document.getElementById('result'))
 
       document.getElementById('params').textContent = data.params;
       document.getElementById('result').innerHTML  = data.table;

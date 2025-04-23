@@ -36,12 +36,14 @@ class EmodeList:
     def safe_float(self, value):
         """
         Attempts to round the value to six decimal places.
-        Returns None if conversion to float fails.
+        Returns 'DNE' if conversion to float fails or value is None.
         """
         try:
+            if value is None:
+                return 'DNE'
             return round(float(value), 6)
         except Exception:
-            return None
+            return 'DNE'
 
     def insert_iteration(self, x, expected, actual, abs_error, rel_error):
         """
@@ -66,10 +68,10 @@ class EmodeList:
         while curr:
             out.append({
                 'x':         self.safe_float(curr.x),
-                'expected':  self.safe_float(curr.expected),
-                'actual':    self.safe_float(curr.actual),
-                'abs_error': self.safe_float(curr.abs_error),
-                'rel_error': self.safe_float(curr.rel_error),
+                'expected':  curr.expected if curr.expected == 'DNE' else self.safe_float(curr.expected),
+                'actual':    curr.actual if curr.actual == 'DNE' else self.safe_float(curr.actual),
+                'abs_error': curr.abs_error if curr.abs_error == 'N/A' else self.safe_float(curr.abs_error),
+                'rel_error': curr.rel_error if curr.rel_error == 'N/A' else self.safe_float(curr.rel_error),
             })
             curr = curr.next
         return out
@@ -167,37 +169,64 @@ class Emode:
         # Euler forward sweep
         n_steps = int(np.ceil((self.desired_x - self.initial_x) / self.step_size))
         for _ in range(n_steps):
-            if self.ode_type == 'xy':
-                slope = self.lambdified_ode(x_curr, y_curr)
-            elif self.ode_type == 'x':
-                slope = self.lambdified_ode(x_curr)
-            elif self.ode_type == 'y':
-                slope = self.lambdified_ode(y_curr)
-            else:
-                slope = self.lambdified_ode()
+            try:
+                if self.ode_type == 'xy':
+                    slope = self.lambdified_ode(x_curr, y_curr)
+                elif self.ode_type == 'x':
+                    slope = self.lambdified_ode(x_curr)
+                elif self.ode_type == 'y':
+                    slope = self.lambdified_ode(y_curr)
+                else:
+                    slope = self.lambdified_ode()
 
-            x_next = x_curr + self.step_size
-            y_next = y_curr + self.step_size * slope
-            self.x_vals_euler.append(x_next)
-            self.y_vals_euler.append(y_next)
-            emode_list.insert_iteration(x_next, None, y_next, None, None)
-            x_curr, y_curr = x_next, y_next
+                # Check for invalid values
+                if not np.isfinite(slope):
+                    raise ValueError("Invalid slope value")
+
+                x_next = x_curr + self.step_size
+                y_next = y_curr + self.step_size * slope
+                self.x_vals_euler.append(x_next)
+                self.y_vals_euler.append(y_next)
+                emode_list.insert_iteration(x_next, None, y_next, None, None)
+                x_curr, y_curr = x_next, y_next
+            except (ValueError, ZeroDivisionError, TypeError) as e:
+                # If we encounter an error, mark the values as DNE
+                x_next = x_curr + self.step_size
+                emode_list.insert_iteration(x_next, 'DNE', 'DNE', 'N/A', 'N/A')
+                x_curr = x_next
+                continue
 
         # Analytic solve at evenly spaced points
-        self._compute_analytic(n_steps + 1)
+        try:
+            self._compute_analytic(n_steps + 1)
+        except Exception:
+            # If analytic solution fails, we'll just use DNE for expected values
+            self.x_vals_analytic = []
+            self.y_vals_analytic = []
 
         # Populate expected values and errors
         curr = emode_list.head
         while curr:
             if self.x_vals_analytic:
-                idx = min(range(len(self.x_vals_analytic)),
-                          key=lambda i: abs(self.x_vals_analytic[i] - curr.x))
-                y_expected = self.y_vals_analytic[idx]
+                try:
+                    idx = min(range(len(self.x_vals_analytic)),
+                              key=lambda i: abs(self.x_vals_analytic[i] - curr.x))
+                    y_expected = self.y_vals_analytic[idx]
+                except Exception:
+                    y_expected = 'DNE'
             else:
-                y_expected = None
+                y_expected = 'DNE'
 
-            abs_err = abs(y_expected - curr.actual) if y_expected is not None else None
-            rel_err = abs_err / y_expected if (abs_err is not None and y_expected != 0) else None
+            if curr.actual != 'DNE' and y_expected != 'DNE':
+                try:
+                    abs_err = abs(float(y_expected) - float(curr.actual))
+                    rel_err = abs_err / float(y_expected) if float(y_expected) != 0 else 'N/A'
+                except Exception:
+                    abs_err = 'N/A'
+                    rel_err = 'N/A'
+            else:
+                abs_err = 'N/A'
+                rel_err = 'N/A'
 
             curr.expected  = y_expected
             curr.abs_error = abs_err
