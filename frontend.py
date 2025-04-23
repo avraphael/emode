@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 from utils.table_formatter import TableFormatter
 from computations.emode import Emode
+import webbrowser
+import threading
+import os
 
 app = Flask(
     __name__,
@@ -51,5 +54,12 @@ def evaluate():
     except Exception as e:
         return jsonify(error=str(e)), 400
 
+
+def open_browser():
+    webbrowser.open_new("http://127.0.0.1:5000/")
+
 if __name__ == '__main__':
+    # Only open browser if this is the actual server process, not the reloader
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        threading.Timer(1.0, open_browser).start()
     app.run(debug=True)
