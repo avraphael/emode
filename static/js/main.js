@@ -99,7 +99,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const processedLatex = latex.replace(
       /e\^\{([^}]*)\}/g,
       '\\exp($1)'
-    );
+    ).replace(
+      /e\^([a-zA-Z0-9])/g,
+      '\\exp($1)'
+      );
+
+    console.log(latex)
+    console.log(processedLatex)
 
     const start    = parseFloat(document.getElementById('start').value);
     const end      = parseFloat(document.getElementById('end').value);
