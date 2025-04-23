@@ -19,13 +19,14 @@ class TableFormatter:
         html = [
             '<table class="table table-striped table-bordered">',
             '<thead><tr>',
-            '<th>x</th><th>Expected y</th><th>Actual y</th>',
+            '<th>n</th><th>x</th><th>Expected y</th><th>Actual y</th>',
             '<th>Abs Error</th><th>Rel Error</th>',
             '</tr></thead><tbody>'
         ]
         for r in values:
             html.append(
                 f"<tr>"
+                f"<td>{values.index(r)}</td>"
                 f"<td>{r['x']}</td>"
                 f"<td>{r['expected']}</td>"
                 f"<td>{r['actual']}</td>"
