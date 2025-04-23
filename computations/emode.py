@@ -1,7 +1,7 @@
 import re
 import numpy as np
 import sympy as sp
-from sympy import Eq, Derivative, E
+from sympy import Eq, Derivative, E, pi
 from sympy.parsing.latex import parse_latex
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
